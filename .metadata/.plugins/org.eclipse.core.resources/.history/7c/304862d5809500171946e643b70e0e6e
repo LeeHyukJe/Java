@@ -1,0 +1,97 @@
+package ch16;
+
+import java.net.*;
+import java.io.*;
+import java.util.*;
+import java.sql.*;
+
+public class ServerTest {
+
+	public void start() {
+		ServerSocket serverSocket = null;
+		Socket socket = null;
+
+		try {
+			serverSocket = new ServerSocket(7777);
+			System.out.println("서버 연결 요청 중입니다.");
+			while (true) {
+				socket = serverSocket.accept();
+				System.out.println("서버 요청이 들어왔습니다.");
+				System.out.println(socket.getInetAddress() + ":" + socket.getPort() + " 접속");
+				ServerThread server = new ServerThread(socket);
+				server.start();
+			}
+		} catch (Exception e) {
+			System.out.println("서버에 문제가 발생하였습니다.");
+		}
+	}
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		new ServerTest().start();
+	}
+
+	static class ServerThread extends Thread {
+		Socket socket;
+		DataInputStream dis;
+		DataOutputStream dos;
+
+		ServerThread(Socket socket) {
+			this.socket = socket;
+			try {
+				dis = new DataInputStream(socket.getInputStream());
+				dos = new DataOutputStream(socket.getOutputStream());
+			} catch (Exception e) {
+			}
+		}
+
+		String name = "";
+
+		public void run() {
+			try {
+				if (dis != null) {
+					name = dis.readUTF();
+					dos.writeUTF("#" + name + "님이 입장하였습니다."); // 입장한 사람의 이름을 클라이언트로 전송
+				}
+
+				while (dis != null) {
+					String data=dis.readUTF();
+					dos.writeUTF(data); // 입력한 내용을 다시 클라이언트로 전송
+					new Thread(new DBServer(data)).start();
+				}
+			} catch (Exception e) {
+			}
+		}
+	}
+
+	static class DBServer implements Runnable {
+		DataInputStream dis;
+		Connection conn;
+		PreparedStatement pstmt;
+		String data;
+		DBServer(String data) {
+			this.data=data;
+			String jdbc_driver = "com.mysql.jdbc.Driver";
+			String jdbc_url = "jdbc:mysql://127.0.0.1:3306/db";
+			try {
+				Class.forName(jdbc_driver);
+				conn = DriverManager.getConnection(jdbc_url,"root","1234");
+				String input = "insert into test values(?,?)";
+				pstmt = conn.prepareStatement(input);
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+		}
+
+		public void run() {
+				try {
+					pstmt.setInt(1, 1);
+					pstmt.setString(2, data);
+					pstmt.executeUpdate();
+				} catch (Exception e) {
+					System.out.println("오류내용->"+e);
+				}
+		}
+	}
+
+}

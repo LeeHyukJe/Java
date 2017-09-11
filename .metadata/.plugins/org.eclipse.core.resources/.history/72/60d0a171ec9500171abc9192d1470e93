@@ -1,0 +1,51 @@
+package ch16;
+
+public class testThread implements Runnable {
+	
+	public void run(){
+		while(true) {
+			System.out.println("a");
+			try {
+				Thread.sleep(1000);
+				System.out.println("a");
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	void this_run() {
+		Thread tr=new Thread(this);
+		tr.start();
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		testThread ts=new testThread();
+		ts.this_run();
+		testThread2 ts2=new testThread2();
+		ts2.this_run();
+	}
+
+}
+
+class testThread2 extends Thread{
+	public void run(){
+		while(true) {
+			System.out.println("a");
+			try {
+				Thread.sleep(1000);
+				System.out.println("b");
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	void this_run() {
+		testThread2 tr2=new testThread2();
+		tr2.start();
+	}
+	
+}
